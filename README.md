@@ -1,5 +1,6 @@
 # EscapeFromSnakes
-2D Game made with pygame library (Python 3)
+2D Game made with pygame library (Python 3).
+
 Note that it is poorly coded (One of my first projects back in 2021 <[o_o]>)
 
 Screenshots:
