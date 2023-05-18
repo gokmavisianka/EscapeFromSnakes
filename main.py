@@ -1,30 +1,5 @@
-"""
-MIT License
-
-Copyright (c) 2023 Rasim Mert YILDIRIM
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
-
 import pygame
 import threading
-import time
 import random
 
 resolution = (1000, 1000)
@@ -33,7 +8,8 @@ pygame.display.set_caption('Escape From Snakes')
 background_color = (0, 0, 0)
 
 FPS = 30
-delay = round(1 / FPS, 4)
+
+clock = pygame.time.Clock()
 
 block_size = 20
 left, up, right, down = (-block_size, 0), (0, -block_size), (block_size, 0), (0, block_size)
@@ -70,8 +46,6 @@ class Snake:
         self.length = length
         self.color = color
         self.alive = True
-
-        threading.Thread(target=self.loop).start()
 
     def decide(self):
         self.directions = []
@@ -115,16 +89,13 @@ class Snake:
         pygame.draw.rect(screen, self.head_color, (self.x, self.y, block_size, block_size))
 
 
-    def loop(self):
-        while self.alive and keep_running:
-            self.decide()
-            self.move()
-            self.check_length()
-            self.draw()
-            self.check_collisions()
-            time.sleep(delay)
-
-
+    def iteration(self):
+        self.decide()
+        self.move()
+        self.check_length()
+        self.draw()
+        self.check_collisions()
+            
 class Snakes:
     def __init__(self, limit):
         self.snake_count = 0
@@ -170,12 +141,10 @@ class Apple:
         keep_running = False
         print(NL + NL + f" Score: {score.value} ".center(20, "*")  + "\n" + NL + NL)
 
-    def loop(self):
-        while keep_running:
-            self.update_position()
-            self.draw()
-            self.check_collisions()
-            time.sleep(delay)
+    def iteration(self):
+        self.update_position()
+        self.draw()
+        self.check_collisions()
 
 
 class Score:
@@ -194,36 +163,27 @@ class Score:
     def draw(self):
         screen.blit(self.text, self.position)
 
-    def loop(self):
-        while keep_running:
-            self.increase(score_per_frame)
-            self.update_text()
-            self.draw()
-            time.sleep(delay)
+    def iteration(self):
+        self.increase(score_per_frame)
+        self.update_text()
+        self.draw()
 
 
 apple = Apple()
 score = Score()
 snakes = Snakes(limit=snake_limit)
-
-def main():
-    def fill_and_update_screen():
-        while keep_running:
-            screen.fill(background_color)
-            time.sleep(delay)
-            pygame.display.update()
-
-    threading.Thread(target=fill_and_update_screen).start()
-    threading.Thread(target=score.loop).start()
-    threading.Thread(target=apple.loop).start()
-    snakes.create_snake(1)
-
-main()
+snakes.create_snake(1)
 
 while keep_running:
+    screen.fill(background_color)
+    for snake in snakes._list_:
+        snake.iteration()
+    score.iteration()
+    apple.iteration()
+    pygame.display.flip()
     for event in pygame.event.get():
         if event == pygame.QUIT:
             keep_running = False
 
-    time.sleep(delay)
-    
+    clock.tick(FPS)
+        
